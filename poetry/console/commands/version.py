@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from cleo.helpers import argument
 from cleo.helpers import option
+from poetry.core.utils.helpers import normalize_version
 
 from .command import Command
 
@@ -25,7 +26,10 @@ class VersionCommand(Command):
             optional=True,
         )
     ]
-    options = [option("short", "s", "Output the version number only")]
+    options = [
+        option("short", "s", "Output the version number only"),
+        option("normalized", description="Output the normalized version number"),
+    ]
 
     help = """\
 The version command shows the current version of the project or bumps the version of
@@ -69,12 +73,17 @@ patch, minor, major, prepatch, preminor, premajor, prerelease.
 
             self.poetry.file.write(content)
         else:
+            if self.option('normalized'):
+                version = normalize_version(self.poetry.package.pretty_version)
+            else:
+                version = self.poetry.package.pretty_version
+
             if self.option("short"):
-                self.line("{}".format(self.poetry.package.pretty_version))
+                self.line("{}".format(version))
             else:
                 self.line(
                     "<comment>{}</> <info>{}</>".format(
-                        self.poetry.package.name, self.poetry.package.pretty_version
+                        self.poetry.package.name, version
                     )
                 )
 
